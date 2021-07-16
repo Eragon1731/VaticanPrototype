@@ -1,0 +1,16 @@
+*.DS_Store
+Library/
+Temp/
+obj/
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+ehthumbs.db
+Thumbs.db
+UnityGenerated/
+Logs/
+*.sln
+/Test/
+.vs/
+/Assembly-CSharp.csproj
