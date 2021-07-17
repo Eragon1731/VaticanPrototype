@@ -14,7 +14,7 @@ public class ParseIIIF : MonoBehaviour
     public int book_index = 0;
 
     Manifest json;
-    WWW file;
+  //  WWW file;
     int max_pages = 0;
 
     //tester
@@ -85,12 +85,14 @@ public class ParseIIIF : MonoBehaviour
 
     IEnumerator LoadRemoteURL(string path)
     {
-        file = new WWW(path);
-        yield return file;
+        var file = new UnityWebRequest(path);
+        file.downloadHandler = new DownloadHandlerBuffer();
+        yield return file.SendWebRequest();
 
+        
         if (file.error == null)
         {
-            ParseJson((file.text));
+            ParseJson((file.downloadHandler.text));
         }
         else
         {
