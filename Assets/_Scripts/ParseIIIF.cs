@@ -8,10 +8,14 @@ using UnityEngine.Networking;
 public class ParseIIIF : MonoBehaviour
 {
     public string path; 
-    WWW file;
+    
 
-    List<string> content;
-    public Sprite imageTexture;
+    public GameObject spriteObj;
+    public int book_index = 0;
+
+    Manifest json;
+    WWW file;
+    int max_pages = 0;
 
     //tester
     //https://digi.vatlib.it/iiif/MSS_Vat.lat.1125/manifest.json
@@ -22,45 +26,39 @@ public class ParseIIIF : MonoBehaviour
         StartCoroutine(LoadRemoteURL(path));
     }
 
-    IEnumerator LoadRemoteURL(string path)
-    {
-        file = new WWW(path);
-        yield return file;
-
-        if (file.error == null)
-        {
-            ParseJson( ( file.text));
-        }
-        else
-        {
-            Debug.Log("ERROR: invalid path" + path);
-        }
-    }
-
-    /* Read and store json values */
+    /* Parse JSON */
     void ParseJson(string data) {
-
-        Manifest json = JsonConvert.DeserializeObject<Manifest>(data);
-        print(json.sequences[0].canvases.Count); // use dictionaries
-
-        List<string> uri_list = new List<string>();
-
+        json = JsonConvert.DeserializeObject<Manifest>(data);
+        max_pages = json.sequences[0].canvases.Count;
 
         //json.sequences[0].canvases[0].images[0].resource.service["@id"];
         //get the image uri
         //eg. https://digi.vatlib.it/iiifimage/MSS_Vat.lat.1125/Vat.lat.1125_0004_cy_0001v.jp2/0,0,2128,3072/266,/0/native.jpg
 
-        //foreach (var canvas in json.sequences[0].canvases) {
-            string temp = json.sequences[0].canvases[2].images[0].resource.service["@id"] + "/0,0,2128,3072/266,/0/native.jpg";
-            
-            DownloadImage(temp);
-        //}
-
-        print("length " + uri_list.Count);
-
-
-
+        GetNewImage();
     }
+
+    /* Change Images in Book */
+
+    public void OnMouseDown()
+    {
+        if (book_index < max_pages)
+        {
+            GetNewImage(++book_index);
+        }
+        else {
+            book_index = -1;
+            Debug.Log("Warning: End of book reached; Resetting scene");
+        }
+    }
+
+    void GetNewImage(int index = 0) {
+        string temp = json.sequences[0].canvases[index].images[0].resource.service["@id"] + "/0,0,2128,3072/266,/0/native.jpg";
+        DownloadImage(temp);
+    }
+
+
+    /* Download Remote Assets */
 
     public void DownloadImage(string url) {
          
@@ -71,7 +69,7 @@ public class ParseIIIF : MonoBehaviour
             }
             else {
                 Texture2D texture = DownloadHandlerTexture.GetContent(req);
-                imageTexture = Sprite.Create(texture, new Rect(0,0, texture.width, texture.height), new Vector2(0.5f,0.5f));
+                spriteObj.GetComponent<SpriteRenderer>().sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
             }
         }));
     }
@@ -83,6 +81,21 @@ public class ParseIIIF : MonoBehaviour
             callback(req);
         }
     
+    }
+
+    IEnumerator LoadRemoteURL(string path)
+    {
+        file = new WWW(path);
+        yield return file;
+
+        if (file.error == null)
+        {
+            ParseJson((file.text));
+        }
+        else
+        {
+            Debug.Log("ERROR: invalid path" + path);
+        }
     }
 }
 
